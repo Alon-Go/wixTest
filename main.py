@@ -19,7 +19,7 @@ conn = sql.create_engine(engine_string)
 # for internal testing purposes:
     # engine_string = 'mysql+mysqlconnector://alon:a@localhost:3306/wixTest'
     # conn = sql.create_engine(engine_string)
-S = conn.connect()
+S = tconn.connect()
 
 # 2. Split DB by gender -> ALON_test_female/male
 Genders = ['male','female']
@@ -28,7 +28,7 @@ for gender in Genders:
 
 # 3,4. Split and store DB by age -> ALON_test_<age_group>
 for age_group in range(1,11):
-    temp = data.loc[data['dob.age'].between(age_group*10,(age_group+1)*10)]
+    temp = data.loc[data['dob.age'].between(age_group*10,(age_group+1)*10, inclusive='left')]
     temp.to_sql(name=Head+str(age_group),con=conn)
 
 # 5. top 20 last registered from each gender -> ALON_test_20
@@ -36,17 +36,7 @@ meta_data = sql.MetaData()
 temp = pd.DataFrame()
 for gender in Genders:
     db = sql.Table(Head+gender, sql.MetaData(), autoload=True, autoload_with=conn)
-    cols = db.columns.values()
-    # ensure registered_date kept in the same location across tables
-    registered_date = 'registered.date'
-    registered_date_locaion = 0
-    for val in db.c:
-        if registered_date in str(val):
-            break
-        else:
-            registered_date_locaion += 1
-
-    results = S.execute(sql.select(db).order_by(sql.desc(db.columns[registered_date_locaion])).limit(20)).fetchall()
+    results = S.execute(sql.select(db).order_by(sql.desc(db.columns['registered.date'])).limit(20)).fetchall()
     temp =  pd.concat([temp,pd.DataFrame(results)])
 
 temp.columns = results[0].keys()
