@@ -44,9 +44,12 @@ def db_execute(function):
 # Connect to SQL DB
 if internal_testing:
     engine_string = 'mysql+mysqlconnector://alon:a@localhost:3306/wixTest'
-else:
+elif input('This is not a test! Press \"Y\" and ENTER to continue').upper == 'Y':
     engine_string = 'mysql+mysqlconnector://' + interview_credentials.user + ':' + quote(
         interview_credentials.password) + '@' + interview_credentials.host + ':' + interview_credentials.port + '/' + interview_credentials.database
+else:
+    print('What were you thinking?')
+    exit()
 
 conn = sql.create_engine(engine_string)
 db_client = conn.connect()
