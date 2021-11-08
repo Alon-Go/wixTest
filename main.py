@@ -8,7 +8,7 @@ import sqlalchemy.engine
 
 import interview_credentials
 
-internal_testing = True
+internal_testing = False
 Head = 'ALON_test_'
 total_users = 4500
 max_chunk_size = 4500  # scalability assurance
@@ -22,12 +22,25 @@ genders = ['male', 'female']
 age_interval = 10
 age_groups = range(10, 101, age_interval)
 
+engine: sqlalchemy.engine.Engine
+
 
 def main():
+    global engine
+    engine = create_engine()
     save_splitted_users()  # requirements #1-4
     save_newest_users()  # requirement #5
     union_5and20()  # requirement #6
     unionall_2and20()  # requirement #7
+
+
+def create_engine() -> sqlalchemy.engine.Engine:
+    if internal_testing:
+        engine_string = 'mysql+mysqlconnector://alon:a@localhost:3306/wixTest'
+    else:
+        engine_string = 'mysql+mysqlconnector://' + interview_credentials.user + ':' + quote(
+            interview_credentials.password) + '@' + interview_credentials.host + ':' + interview_credentials.port + '/' + interview_credentials.database
+    return sql.create_engine(engine_string)
 
 
 def save_splitted_users():
@@ -130,14 +143,6 @@ def sql_select(table_name_suffix: str) -> sql.select:
 def write_query_results_to_json(cursor: sqlalchemy.engine.CursorResult, filename: str):
     as_data_frame(cursor.fetchall()).to_json(filename, orient='records')
 
-
-if internal_testing:
-    engine_string = 'mysql+mysqlconnector://alon:a@localhost:3306/wixTest'
-else:
-    engine_string = 'mysql+mysqlconnector://' + interview_credentials.user + ':' + quote(
-        interview_credentials.password) + '@' + interview_credentials.host + ':' + interview_credentials.port + '/' + interview_credentials.database
-
-engine = sql.create_engine(engine_string)
 
 if __name__ == '__main__':
     main()
